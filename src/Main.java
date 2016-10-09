@@ -1,20 +1,25 @@
-public class Main {
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+
+public class Main extends Application {
 
     public static void main(String[] args) {
+        launch(args);
+    }
 
-        //Marumaru.search("슬라임").forEach(data -> System.out.println(data.getName() + " | " + data.getUrl()));
+    @Override
+    public void start(Stage primaryStage) throws Exception {
 
-        //Marumaru.list("http://marumaru.in/b/manga/64026").forEach(data -> System.out.println(data.getName() + " | " + data.getUrl()));
+        Parent root = FXMLLoader.load(getClass().getResource("main.fxml"));
 
-        //Download.builder(Marumaru.images("http://www.shencomics.com/archives/264690"));
+        Scene scene = new Scene(root);
 
-        Marumaru.all().forEach(data1 -> {
-            System.out.println(data1.getName());
-            Marumaru.list(data1.getUrl()).forEach(data2 -> {
-                System.out.println(data2.getName());
-                Marumaru.images(data2.getUrl()).forEach(data3 -> System.out.println(data3.getName() + " | " + data3.getUrl()));
-            });
-        });
+        primaryStage.setTitle("MARUMARU");
+        primaryStage.setScene(scene);
+        primaryStage.show();
 
     }
 

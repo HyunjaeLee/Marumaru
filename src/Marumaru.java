@@ -32,6 +32,7 @@ public class Marumaru {
 
     public static Collection<Data> search(String keyword) {
 
+        keyword.replaceAll(" ", "+");
         Document doc = connect(Properties.getProperty("url.search") + keyword);
         Element div = doc.select("div.postbox").first();
         Elements elements = div.select("a[href]");
