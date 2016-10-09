@@ -1,19 +1,20 @@
-import com.gargoylesoftware.htmlunit.WebClient;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 
 public class Marumaru {
 
-    static {
-        java.util.logging.Logger.getLogger("com.gargoylesoftware.htmlunit").setLevel(java.util.logging.Level.OFF); // Silent
-    }
+    public static Map<String, String> cookies = new HashMap<>();
 
     private static Document connect(String url) {
 
@@ -22,6 +23,7 @@ public class Marumaru {
             doc = Jsoup.connect(url)
                     .userAgent("Mozilla")
                     .timeout(10000)
+                    .cookies(cookies)
                     .get();
         } catch (IOException e) {
             e.printStackTrace();
@@ -62,22 +64,35 @@ public class Marumaru {
 
     }
 
-    public static Collection<Data> images(String url) {
+    private static void nashorn(Document doc) {
 
-        final WebClient webClient = new WebClient();
-        webClient.getOptions().setThrowExceptionOnScriptError(false);
-        webClient.getOptions().setCssEnabled(false);
-        webClient.getOptions().setJavaScriptEnabled(true);
-        String html = null;
+        String script =
+                "var Marumaru = Java.type('Marumaru');" +
+                "var document = {};" +
+                "var location = {reload: function(){" +
+                "var cookie = document.cookie.toString().split('=');" +
+                "Marumaru.cookies.put(cookie[0], cookie[1])" +
+                "}};" +
+                doc.select("script").first().data() + ";";
+
+        ScriptEngine scriptEngine = new ScriptEngineManager().getEngineByName("nashorn");
         try {
-            final HtmlPage page = webClient.getPage(url);
-            html = page.getWebResponse().getContentAsString();
-        } catch (IOException e) {
+            scriptEngine.eval(script);
+        } catch (ScriptException e) {
             e.printStackTrace();
         }
 
+    }
+
+    public static Collection<Data> images(String url) {
+
+        Document doc = connect(url);
+        if(doc.title().equals("You are being redirected...")) {
+            nashorn(doc);
+            doc = connect(url);
+        }
+
         Collection<Data> images = new LinkedList<>();
-        Document doc = Jsoup.parse(html);
         Elements elements = doc.select("img[src*=data]");
         int count = 1;
         for(Element element : elements){
